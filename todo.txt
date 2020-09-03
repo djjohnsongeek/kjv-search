@@ -1,1 +1,4 @@
-automacially detect references
+query db by reference and verse when available
+split view and controller
+check protection against sql injection
+refactor and tidy
