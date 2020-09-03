@@ -2,27 +2,20 @@
 require_once("config.php");
 
 function search($db, $query, $page) {
-    if (!$query) {
-        return array();
-    }
-    $start = microtime(True);
     $search_results = array();
-    // mysqli_query($db, "CREATE TEMPORARY TABLE search_results (reference char(64) NOT NULL, verse text NOT NULL");
 
-    
-    // prepare sql statement
-    $sql = "";
-    foreach (array_values(BOOKS) as $book) {
-        $sql .= "(SELECT reference, verse FROM `". $book . "` WHERE verse LIKE '%" . $query . "%')";
-        if ($book !== "revelation") {$sql .= " UNION ";}
+    if (!$query) {
+        return $search_results;
     }
-    $sql .= " LIMIT " . RESULT_LIMIT;
-    $sql .= " OFFSET " . OFFSET_LIMIT * $page . ";";
+
+    $ref = parse_as_ref($query);
+    debug_print(array($ref));
+
+    $start = microtime(True);
+    $sql = generate_sql($query, $page);
 
     // query database
-    if (!$result = mysqli_query($db, $sql)) {
-        return array(); }
-    
+    $result = mysqli_query($db, $sql);
     $search_results = mysqli_fetch_all($result, MYSQLI_ASSOC);
     mysqli_free_result($result);
     
@@ -32,6 +25,18 @@ function search($db, $query, $page) {
     $search_results["time"] = $end - $start;
 
     return $search_results;
+}
+
+function generate_sql($query, $page) {
+    $sql = "";
+    foreach (array_values(BOOKS) as $book) {
+        $sql .= "(SELECT reference, verse FROM `". $book . "` WHERE verse LIKE '%" . $query . "%')";
+        if ($book !== "revelation") {$sql .= " UNION ";}
+    }
+    $sql .= " LIMIT " . RESULT_LIMIT;
+    $sql .= " OFFSET " . OFFSET_LIMIT * $page . ";";
+
+    return $sql;
 }
 
 function sql_esc($db, $string) {
@@ -80,15 +85,6 @@ function emphasize_result($query, $result_verse) {
     return $verse;
 }
 
-function get_reference($query) {
-    $query = strtolower($query);
-    $book_key = substr($query, 0, 3);
-    if ($book_key === "phi") {
-        $book_key = substr($query, 0, 5);
-    }
-    return BOOKS[$book_key] ?? False;
-}
-
 function parse_as_ref($query) {
     // remove whitespace
     $query = str_replace(" ", "", $query);
@@ -110,6 +106,23 @@ function parse_as_ref($query) {
     $full_ref["ref"] = $book;
 
     return $full_ref;
+}
+
+function get_reference($query) {
+    $query = strtolower($query);
+    $book_key = substr($query, 0, 3);
+    if ($book_key === "phi") {
+        $book_key = substr($query, 0, 5);
+    }
+    return BOOKS[$book_key] ?? False;
+}
+
+function debug_print($items) {
+    echo "<pre>";
+    foreach ($items as $item) {
+        print_r($item);
+    }
+    exit();
 }
 
 
