@@ -148,3 +148,40 @@ function debug_print($items) {
     }
     exit();
 }
+
+function get_chapter($ref) {
+    $chars = str_split($ref);
+    $chapter = "";
+
+    $length = count($chars);
+    for ($i = 0; $i < $length; $i++) {
+        if ($chars[$i] === ":") {
+            break;
+        }
+
+        if (is_numeric($chars[$i]) && $i > 0) {
+            $chapter .= $chars[$i];
+        }
+    }
+
+    return intval($chapter);
+}
+
+function get_verse_number($ref) {
+    $chars = str_split($ref);
+    $verse_num = "";
+
+    $length = count($chars);
+    $parse_flag = False;
+    for ($i = 0; $i < $length; $i++) {
+        if ($parse_flag && is_numeric($chars[$i])) {
+            $verse_num .= $chars[$i];
+        }
+
+        if ($chars[$i] === ":") {
+            $parse_flag = True;
+        }
+    }
+
+    return intval($verse_num);
+}

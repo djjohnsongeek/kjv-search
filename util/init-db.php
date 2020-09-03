@@ -26,10 +26,11 @@ while(True) {
     }
     $arr = explode("\t", $line);
     $ref = $arr[0];
+    $chapter = get_chapter($ref);
     $verse = trim($arr[1]);
+    $verse_id = get_verse_number($ref);
     $book = str_replace(" ", "", strtolower(rtrim($ref, " 0123456789:")));
-    unset($arr);
-    
+
     // create new table if it does not exist
     if (!in_array($book, $books)) {
         array_push($books, $book);
@@ -39,7 +40,7 @@ while(True) {
     }
     
     // insert data into database
-    $sql = "INSERT INTO `{$book}` (reference, verse) VALUES ('" . sql_esc($db, $ref) . "',' " . sql_esc($db, $verse) . "')";
+    $sql = "INSERT INTO `{$book}` (reference, chapter, verse_id, verse) VALUES ('" . sql_esc($db, $ref) . "',' " . sql_esc($db, $chapter) . "','" . sql_esc($db, $verse_id) . "','" . sql_esc($db, $verse) . "')";
     if (!mysqli_query($db, $sql)) {
         echo "SLQ ERROR: " . $db->error;
     }
