@@ -1,4 +1,5 @@
 <?PHP
+// A big file of functions
 require_once("config.php");
 
 function search($db, $query, $page) {
@@ -8,16 +9,20 @@ function search($db, $query, $page) {
         return $search_results;
     }
 
-    $ref = parse_as_ref($query);
-    debug_print(array($ref));
-
     $start = microtime(True);
-    $sql = generate_sql($query, $page);
+    $sql = generate_search_sql($query, $page);
 
     // query database
     $result = mysqli_query($db, $sql);
     $search_results = mysqli_fetch_all($result, MYSQLI_ASSOC);
     mysqli_free_result($result);
+
+    // look up by ref
+    if (empty($search_results)) {
+        $ref = parse_as_ref($query);
+        $sql = generate_ref_sql($ref);
+        debug_print(array($ref, $sql));
+    }
     
     // add additional metrics
     $search_results["count"] = count($search_results);
@@ -27,7 +32,7 @@ function search($db, $query, $page) {
     return $search_results;
 }
 
-function generate_sql($query, $page) {
+function generate_search_sql($query, $page) {
     $sql = "";
     foreach (array_values(BOOKS) as $book) {
         $sql .= "(SELECT reference, verse FROM `". $book . "` WHERE verse LIKE '%" . $query . "%')";
@@ -39,22 +44,40 @@ function generate_sql($query, $page) {
     return $sql;
 }
 
+function generate_ref_sql($ref) {
+    $sql = "";
+    // if chapter, and verse is present
+    // SELECT reference, chapter, verse_id, verse FROM book WHERE chapter = ? AND VERSE = ?;
+
+    // if chapter is present
+    // SELECT reference, chapter, verse_id, verse FROM book WHERE chapter = ?;
+        
+    // if only book is present
+    // SELECT reference, chapter, verse_id, verse FROM book WHERE chapter = 1
+    return $sql;
+}
+
 function sql_esc($db, $string) {
     return mysqli_real_escape_string($db, $string);
 }
 
 function create_table($db, $book_name) {
     $return_bool = True;
+
     $sql = "
     DROP TABLE IF EXISTS `{$book_name}`;
     CREATE TABLE IF NOT EXISTS `{$book_name}` (
         `row_id` int(11) NOT NULL AUTO_INCREMENT,
         `reference` char(64) NOT NULL,
+        `chapter` INT(3) NOT NULL,
+        `verse_id` INT(3) NOT NULL,
         `verse` text NOT NULL,
     PRIMARY KEY (`row_id`),
     UNIQUE KEY `reference` (`reference`));";
-    // $db->store_result();
+    
+
     $result = mysqli_multi_query($db, $sql);
+
     if (!$result){
         echo $db->error;
         $return_bool = False;
@@ -89,8 +112,9 @@ function parse_as_ref($query) {
     // remove whitespace
     $query = str_replace(" ", "", $query);
 
-    // get book
-    if (!$book = get_reference($query)) {
+    // get book name from the query
+    $book = get_reference($query);
+    if (!$book) {
         return $book;
     }
 
@@ -103,7 +127,7 @@ function parse_as_ref($query) {
     // package reference
     $full_ref["chapter"] = $chapter_verse[0];
     $full_ref["verse"] = $chapter_verse[1] ?? '';
-    $full_ref["ref"] = $book;
+    $full_ref["book"] = $book;
 
     return $full_ref;
 }
@@ -124,6 +148,3 @@ function debug_print($items) {
     }
     exit();
 }
-
-
-// print_r(parse_as_ref("exo10"));
