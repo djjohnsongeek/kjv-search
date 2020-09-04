@@ -6,6 +6,7 @@
             html {
                 font-family: Arial;
                 color: #2a314a;
+                font-size: 18px;
             }
             .verse-container {
                 text-align: left;
@@ -27,6 +28,15 @@
             .metrics {
                 font-size: 12px;
                 color: lightgrey;
+            }
+            .verse-number {
+                font-size: .5rem;
+                line-height: 0;
+                vertical-align: super;
+                font-weight: 800;
+            }
+            .referance {
+                font-size: 1.25rem;
             }
         </style>
     </head>
