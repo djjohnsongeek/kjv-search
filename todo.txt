@@ -1,14 +1,19 @@
-proper dispaly for chapter and verse seraching
-    bugs
-    - fix pretty reference on 1Peter, 1Peter1, 1Peter1:3
-    - fix results for "Exodus", "Genesis"
+Bugs/Issues
+- correct ending verse if search q is verse is too high (1 Peter 1:1000)
+- should display no results for referance that contains no verses
+- order results by book (when searching Jesus)
+- prevent mysql errors
 
+Features
+- Add Next and Previous links for chapters
 
-
-split view and controller
-check protection against sql injection
-refactor and tidy
-    - orignize functions catagoriccally
-    - create a db class?
-    - add functions for renering view
-use meaning full function and variable names
+Refactor
+- orignize functions catagorically
+- create a db class?
+- use meaning full function and variable names
+- functions should only do one thing
+    
+Security
+- secure files (prevent abritrary execution)
+- check protection against sql injection
+- check protection against js injection
