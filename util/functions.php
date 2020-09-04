@@ -21,7 +21,12 @@ function search($db, $query, $page) {
     if (empty($search_results)) {
         $ref = parse_as_ref($query);
         $sql = generate_ref_sql($ref);
-        debug_print(array($ref, $sql));
+
+        $result = mysqli_query($db, $sql);
+        $search_results = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        $search_results["display"] = "chunk";
+        $search_results["gen-referance"] = generate_pretty_ref($ref);
+        mysqli_free_result($result);
     }
     
     // add additional metrics
@@ -45,16 +50,38 @@ function generate_search_sql($query, $page) {
 }
 
 function generate_ref_sql($ref) {
-    $sql = "";
-    // if chapter, and verse is present
-    // SELECT reference, chapter, verse_id, verse FROM book WHERE chapter = ? AND VERSE = ?;
+    if(!$ref) {
+        return false;
+    }
 
-    // if chapter is present
-    // SELECT reference, chapter, verse_id, verse FROM book WHERE chapter = ?;
-        
-    // if only book is present
-    // SELECT reference, chapter, verse_id, verse FROM book WHERE chapter = 1
-    return $sql;
+    $sql = "SELECT reference, chapter, verse_id, verse FROM `" . $ref["book"] . "` WHERE ";
+    $sql_where = generate_ref_sql_where($ref);
+
+    return $sql .= $sql_where;
+}
+
+function generate_ref_sql_where($ref) {
+    // if chapter, and verse is present
+    if ($ref["chapter"] && $ref["verse"]) {
+        // multiple verses?
+        $verse_range = explode("-", $ref["verse"]);
+        if (count($verse_range) > 1) {
+            $sql_where = "chapter = '" . $ref["chapter"]
+                       . "' AND verse_id >= '" . $verse_range[0]
+                       . "' AND verse_id <= '" . $verse_range[1] . "';";
+        }
+        else {
+            $sql_where = "chapter = '" . $ref["chapter"]
+            . "' AND verse_id = '" . $ref["verse"] . "';";
+        }
+    }
+    // if just chapter and book
+    else {
+        $chapter = $ref["chapter"] ?? "1";
+        $sql_where = "chapter = '" . $chapter . "';";
+    }
+
+    return $sql_where;
 }
 
 function sql_esc($db, $string) {
@@ -98,14 +125,17 @@ function redirect($url) {
     exit();
 }
 
-function emphasize_result($query, $result_verse) {
+function emphasize_result($query, $verse_text) {
     // emphasize search query
     $pattern = "/" . $query . "/i";
-    preg_match_all($pattern, $result_verse, $matches, PREG_PATTERN_ORDER);
-    $replacement = "<strong><i>" . $matches[0][0] . "</i></strong>";
-    $verse = preg_replace($pattern, $replacement, $result_verse);
+    $match_count = preg_match_all($pattern, $verse_text, $matches, PREG_PATTERN_ORDER);
 
-    return $verse;
+    if($match_count > 0) {
+        $replacement = "<strong><i>" . $matches[0][0] . "</i></strong>";
+        $verse_text = preg_replace($pattern, $replacement, $verse_text);
+    }
+
+    return $verse_text;
 }
 
 function parse_as_ref($query) {
@@ -125,8 +155,8 @@ function parse_as_ref($query) {
     $chapter_verse = explode(":", substr($query, $chapter_pos), 2);
 
     // package reference
-    $full_ref["chapter"] = $chapter_verse[0];
-    $full_ref["verse"] = $chapter_verse[1] ?? '';
+    $full_ref["chapter"] = $chapter_verse[0] ?? null;
+    $full_ref["verse"] = $chapter_verse[1] ?? null;
     $full_ref["book"] = $book;
 
     return $full_ref;
@@ -184,4 +214,12 @@ function get_verse_number($ref) {
     }
 
     return intval($verse_num);
+}
+
+function generate_pretty_ref($ref){
+    $referance = ucfirst($ref["book"])
+               . " " . $ref["chapter"]
+               . ":" . $ref["verse"];
+
+    return $referance;
 }
