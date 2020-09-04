@@ -21,10 +21,11 @@ function search($db, $query, $page) {
     if (empty($search_results)) {
         $ref = parse_as_ref($query);
         $sql = generate_ref_sql($ref);
-
         $result = mysqli_query($db, $sql);
+
         $search_results = mysqli_fetch_all($result, MYSQLI_ASSOC);
         $search_results["display"] = "chunk";
+        
         $search_results["gen-referance"] = generate_pretty_ref($ref);
         mysqli_free_result($result);
     }
@@ -77,7 +78,7 @@ function generate_ref_sql_where($ref) {
     }
     // if just chapter and book
     else {
-        $chapter = $ref["chapter"] ?? "1";
+        $chapter = $ref["chapter"] === "" ? "1" : $ref["chapter"];
         $sql_where = "chapter = '" . $chapter . "';";
     }
 
@@ -142,27 +143,23 @@ function parse_as_ref($query) {
     // remove whitespace
     $query = str_replace(" ", "", $query);
 
-    // get book name from the query
-    $book = get_reference($query);
+    // get book name
+    $book = get_book($query);
+    $chapter = get_chapter($query);
+    $verse = get_verse_number($query);
     if (!$book) {
         return $book;
     }
 
-    // get chapter and verse
-    $pattern = "/[1-9]/";
-    preg_match($pattern, $query, $matches, PREG_OFFSET_CAPTURE);
-    $chapter_pos = $matches[0][1];
-    $chapter_verse = explode(":", substr($query, $chapter_pos), 2);
-
     // package reference
-    $full_ref["chapter"] = $chapter_verse[0] ?? null;
-    $full_ref["verse"] = $chapter_verse[1] ?? null;
     $full_ref["book"] = $book;
+    $full_ref["chapter"] = $chapter == "" ? "1" : $chapter;
+    $full_ref["verse"] = $verse;
 
     return $full_ref;
 }
 
-function get_reference($query) {
+function get_book($query) {
     $query = strtolower($query);
     $book_key = substr($query, 0, 3);
     if ($book_key === "phi") {
@@ -175,6 +172,7 @@ function debug_print($items) {
     echo "<pre>";
     foreach ($items as $item) {
         print_r($item);
+        echo "<br/>";
     }
     exit();
 }
@@ -194,7 +192,7 @@ function get_chapter($ref) {
         }
     }
 
-    return intval($chapter);
+    return $chapter;
 }
 
 function get_verse_number($ref) {
@@ -204,7 +202,7 @@ function get_verse_number($ref) {
     $length = count($chars);
     $parse_flag = False;
     for ($i = 0; $i < $length; $i++) {
-        if ($parse_flag && is_numeric($chars[$i])) {
+        if ($parse_flag && (is_numeric($chars[$i]) || $chars[$i] === "-")) {
             $verse_num .= $chars[$i];
         }
 
@@ -213,7 +211,7 @@ function get_verse_number($ref) {
         }
     }
 
-    return intval($verse_num);
+    return $verse_num;
 }
 
 function generate_pretty_ref($ref){
@@ -224,7 +222,7 @@ function generate_pretty_ref($ref){
     if ($ref["verse"]) {
         $referance .= ":" . $ref["verse"];
     }
-               
+
     return $referance;
 }
 
@@ -248,7 +246,7 @@ function generate_search_results_html($page, $query, $count, $search_results) {
 
     // render block of verses
     if(isset($search_results["display"])) {
-        //debug_print(array($search_results));
+        
         $html .= "<span class='metrics'>"
                 . "Result found in "
                 . $search_results["time"]
