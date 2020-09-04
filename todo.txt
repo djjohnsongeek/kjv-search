@@ -1,4 +1,14 @@
-query db by reference and verse when available
+proper dispaly for chapter and verse seraching
+    bugs
+    - fix pretty reference on 1Peter, 1Peter1, 1Peter1:3
+    - fix results for "Exodus", "Genesis"
+
+
+
 split view and controller
 check protection against sql injection
 refactor and tidy
+    - orignize functions catagoriccally
+    - create a db class?
+    - add functions for renering view
+use meaning full function and variable names
