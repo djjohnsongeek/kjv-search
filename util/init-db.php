@@ -1,4 +1,6 @@
 <?PHP
+# script to reset database
+
 require_once("config.php");
 require_once("functions.php");
 require_once("validations.php");
