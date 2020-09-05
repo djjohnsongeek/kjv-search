@@ -10,56 +10,32 @@ function search($db, $query, $page) {
     }
 
     $start = microtime(True);
-    $sql = generate_search_sql($query, $page);
-
-    // query database
-    $result = mysqli_query($db, $sql);
-    $search_results = mysqli_fetch_all($result, MYSQLI_ASSOC);
-    mysqli_free_result($result);
+    $sql = $db->generate_search_sql($query, $page);
+    $search_results = $db->execute($sql);
 
     // look up by ref
     if (empty($search_results)) {
         $ref = parse_as_ref($query);
-        $sql = generate_ref_sql($ref);
-        $result = mysqli_query($db, $sql);
+        $sql = $db->generate_ref_sql($ref);
 
-        $search_results = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        $search_results = $db->execute($sql);
+
+        $search_results["gen-referance"] = generate_pretty_ref($search_results);
+        $search_results["count"] = count($search_results) - 1;
         $search_results["display"] = "chunk";
-        
-        $search_results["gen-referance"] = generate_pretty_ref($ref);
-        mysqli_free_result($result);
     }
     
     // add additional metrics
-    $search_results["count"] = count($search_results);
+    if (!isset($search_results["count"])) {
+        $search_results["count"] = count($search_results);
+    }
     $end = microtime(True);
     $search_results["time"] = $end - $start;
 
     return $search_results;
 }
 
-function generate_search_sql($query, $page) {
-    $sql = "";
-    foreach (array_values(BOOKS) as $book) {
-        $sql .= "(SELECT reference, verse FROM `". $book . "` WHERE verse LIKE '%" . $query . "%')";
-        if ($book !== "revelation") {$sql .= " UNION ";}
-    }
-    $sql .= " LIMIT " . RESULT_LIMIT;
-    $sql .= " OFFSET " . OFFSET_LIMIT * $page . ";";
 
-    return $sql;
-}
-
-function generate_ref_sql($ref) {
-    if(!$ref) {
-        return false;
-    }
-
-    $sql = "SELECT reference, chapter, verse_id, verse FROM `" . $ref["book"] . "` WHERE ";
-    $sql_where = generate_ref_sql_where($ref);
-
-    return $sql .= $sql_where;
-}
 
 function generate_ref_sql_where($ref) {
     // if chapter, and verse is present
@@ -214,16 +190,20 @@ function get_verse_number($ref) {
     return $verse_num;
 }
 
-function generate_pretty_ref($ref){
-    $referance = ucfirst($ref["book"])
-               . " "
-               . $ref["chapter"];
+function generate_pretty_ref($search_results){
+    $count = count($search_results);
+    $reference = "";
 
-    if ($ref["verse"]) {
-        $referance .= ":" . $ref["verse"];
+    if($count >= 1) {
+        $reference = $search_results[0]["reference"];
     }
 
-    return $referance;
+    if ($count > 1) {
+        $end_verse = end($search_results)["verse_id"];
+        $reference .= "-" . $end_verse;
+    }
+
+    return $reference;
 }
 
 function generate_search_results_html($page, $query, $count, $search_results) {
@@ -245,8 +225,7 @@ function generate_search_results_html($page, $query, $count, $search_results) {
     }
 
     // render block of verses
-    if(isset($search_results["display"])) {
-        
+    if(isset($search_results["display"]) && $count > 0) {
         $html .= "<span class='metrics'>"
                 . "Result found in "
                 . $search_results["time"]
@@ -292,7 +271,8 @@ function generate_search_results_html($page, $query, $count, $search_results) {
 
     // No results message
     if ($count === 0) {
-        $html .= "<div class='no-results-message'><span>No Results Found</span></div>";
+        $html .= "<div class='no-results-message'><span>No Results Found for '"
+              . $query . "'</span></div>";
     }
 
     return $html;
