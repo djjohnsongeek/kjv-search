@@ -1,8 +1,7 @@
 Bugs/Issues
-- correct ending verse if search q is verse is too high (1 Peter 1:1000)
-- should display no results for referance that contains no verses
+- prevent mysql errors (Empty query)
+- use PDO or 
 - order results by book (when searching Jesus)
-- prevent mysql errors
 
 Features
 - Add Next and Previous links for chapters
