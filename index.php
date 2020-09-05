@@ -12,6 +12,7 @@ $page = intval($page);
 $search_results = search($db, $query, $page);
 $count = $search_results["count"] ?? NULL;
 
+$db->close();
 // render page
 include_once(DIR_TEMPLATES . "main.php");
 
