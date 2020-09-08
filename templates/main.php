@@ -61,9 +61,8 @@
     <div id="results">
         <?php
         echo generate_search_results_html(
-            $page,
-            $query,
-            $count,
+            htmlspecialchars($page),
+            htmlspecialchars($query),
             $search_results
         );
         ?>
