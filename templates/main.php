@@ -10,6 +10,20 @@
             font-size: 18px;
         }
 
+        input {
+            box-sizing: border-box;
+            width: 250px;
+            font-size: 18px;
+        }
+
+        button {
+            font-size: 18px;
+            box-sizing: border-box;
+            border: 1px solid grey;
+            padding: 2px;
+            border-left: 0px;
+        }
+
         .verse-container {
             text-align: left;
             margin: 20px 0px;
@@ -20,8 +34,7 @@
             color: lightgrey;
         }
 
-        #results,
-        .search-bar {
+        #results, .search-bar {
             margin: auto;
             width: 75%;
             text-align: center;
@@ -54,9 +67,15 @@
     <div class="search-bar">
         <h1>Search the KJV</h1>
         <form action="/">
-            <input type="text" name="q" />
-            <button type="submit">Search</button>
-        </form>
+            <div style="display: flex; flex-direction: row; flex-wrap: wrap;">
+                <div>
+                    <input type="text" name="q" />
+                </div>
+                <div>
+                    <button type="submit">Search</button>
+                </div>
+            </div>
+        </form><br/>
     </div>
     <div id="results">
         <?php
