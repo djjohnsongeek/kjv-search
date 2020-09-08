@@ -9,32 +9,40 @@ function search($db, $query, $page) {
         return $search_results;
     }
 
-    $start = microtime(True);
-    $sql = $db->generate_search_sql($query, $page);
-    $search_results = $db->execute($sql);
-
-    // look up by ref
-    if (empty($search_results)) {
-        $ref = parse_as_ref($query);
-        $sql = $db->generate_ref_sql($ref);
-
-        $search_results = $db->execute($sql);
-
-        $search_results["gen-referance"] = generate_pretty_ref($search_results);
-        $search_results["count"] = count($search_results) - 1;
-        $search_results["display"] = "chunk";
+    // by keyword first, then reference
+    $search_results = keyword_search($db, $query, $page);
+    if ($search_results["count"] < 1) {
+        $search_results = reference_search($db, $query);
     }
-    
-    // add additional metrics
-    if (!isset($search_results["count"])) {
-        $search_results["count"] = count($search_results);
-    }
-    $end = microtime(True);
-    $search_results["time"] = $end - $start;
 
     return $search_results;
 }
 
+function keyword_search($db, $query, $page) {
+    $sql = $db->generate_search_sql($query, $page);
+    $search_results = $db->execute($sql);
+    $search_results["count"] = count($search_results);
+
+    return $search_results;
+}
+
+function reference_search($db, $query) {
+    $ref = parse_as_ref($query);
+    $sql = $db->generate_ref_sql($ref);
+
+    if ($sql) {
+        $search_results = $db->execute($sql);
+        $search_results["gen-referance"] = generate_pretty_ref($search_results);
+        $search_results["count"] = count($search_results) - 1;
+        $search_results["display"] = "chunk";
+    }
+    else {
+        $search_results = array();
+        $search_results["count"] = 0;
+    }
+
+    return $search_results;
+}
 
 
 function generate_ref_sql_where($ref) {
@@ -138,8 +146,13 @@ function parse_as_ref($query) {
 function get_book($query) {
     $query = strtolower($query);
     $book_key = substr($query, 0, 3);
+
+    // special cases
     if ($book_key === "phi") {
         $book_key = substr($query, 0, 5);
+    }
+    if ($book_key === "jud") {
+        $book_key = substr($query, 0, 4);
     }
     return BOOKS[$book_key] ?? False;
 }
@@ -206,73 +219,81 @@ function generate_pretty_ref($search_results){
     return $reference;
 }
 
-function generate_search_results_html($page, $query, $count, $search_results) {
+function generate_search_results_html($page, $query, $search_results) {
     $html = "";
-    if($query && $count > 0 && !isset($search_results["display"])) {
 
-
-        // paginaton links
-        $prev_link = "<a href='http://biblesearch/?q=" . $query . "&p=" . strval($page - 1) . "'>Prev</a> | ";
-        $next_link = "<a href='http://biblesearch/?q=" . $query . "&p=" . strval($page + 1) . "'>Next</a><br/>";
-
-        $prev_link = $page >= 1 ? $prev_link : "<span class='disabled'>Prev</span> | ";
-        $next_link = $count > 10 ? $next_link : "<span class='disabled'>Next</span><br/>";
-
-        $html .= $prev_link . $next_link;
-
-        // metrics
-        $html .= "<span class='metrics'>" . $count . " results in " . $search_results["time"] . " seconds.</span><br/>";
+    if($query && $search_results["count"] > 0 && !isset($search_results["display"])) {
+        $html .= generate_pagination_links($query, $search_results, $page);
     }
 
-    // render block of verses
-    if(isset($search_results["display"]) && $count > 0) {
-        $html .= "<span class='metrics'>"
-                . "Result found in "
-                . $search_results["time"]
-                . " seconds.</span><br/>";
-
-        $html .= "<div class='verse-container'>";
-        $html .= "<div class='referance'><strong>" . $search_results["gen-referance"] . "</strong></div>";
-        $html .= "<div>";
-
-        foreach($search_results as $result) {
-            if (isset($result["reference"])) {
-                $verse_html = "<span class='verse-number'>"
-                            . $result["verse_id"]
-                            . "</span>"
-                            . " " . $result["verse"] . " ";
-                $html .= $verse_html;
-            }
-        }
-
-        $html .= "</div></div>";        
+    if(isset($search_results["display"]) && $search_results["count"] > 0) {
+        $html .= generate_verse_block($search_results);
     }
-    // render rows of verses
     else {
-        $render_count = 0;
-        foreach($search_results as $result) {
-            // don't render the 11th result
-            if ($render_count === 10) {break;}
-
-            // only render results with a "reference"
-            if (isset($result["reference"])) {
-                $verse = emphasize_result($query, $result["verse"]);
-        
-                // render result
-                $html .= "
-                <div class='verse-container'>
-                    <div class='referance'><strong >" . $result["reference"] . "</strong></div>
-                    <div>" . $verse . "</div>
-                </div>";
-                $render_count++;
-            }
-        }
+        $html .= generate_verse_rows($query, $search_results);
     }
 
     // No results message
-    if ($count === 0) {
+    if ($search_results["count"] === 0) {
         $html .= "<div class='no-results-message'><span>No Results Found for '"
               . $query . "'</span></div>";
+    }
+
+    return $html;
+}
+
+function generate_pagination_links($query, $search_results,  $page) {
+    $html = "";
+    $prev_link = "<a href='http://biblesearch/?q=" . $query . "&p=" . strval($page - 1) . "'>Prev</a> | ";
+    $next_link = "<a href='http://biblesearch/?q=" . $query . "&p=" . strval($page + 1) . "'>Next</a><br/>";
+
+    $prev_link = $page >= 1 ? $prev_link : "<span class='disabled'>Prev</span> | ";
+    $next_link = $search_results["count"] > 10 ? $next_link : "<span class='disabled'>Next</span><br/>";
+
+    $html .= $prev_link . $next_link;
+
+    return $html;
+}
+
+function generate_verse_block($search_results) {
+    $html = "<div class='verse-container'>";
+    $html .= "<div class='referance'><strong>" . $search_results["gen-referance"] . "</strong></div>";
+    $html .= "<div>";
+
+    foreach($search_results as $result) {
+        if (isset($result["reference"])) {
+            $verse_html = "<span class='verse-number'>"
+                        . $result["verse_id"]
+                        . "</span>"
+                        . " " . $result["verse"] . " ";
+            $html .= $verse_html;
+        }
+    }
+
+    $html .= "</div></div>";
+    
+    return $html;
+}
+
+function generate_verse_rows($query, $search_results) {
+    $html = "";
+    $render_count = 0;
+
+    foreach($search_results as $result) {
+        // don't render the 11th result
+        if ($render_count === 10) {break;}
+
+        // filter out meta data
+        if (isset($result["reference"])) {
+            $verse = emphasize_result($query, $result["verse"]);
+    
+            $html .= "
+            <div class='verse-container'>
+                <div class='referance'><strong >" . $result["reference"] . "</strong></div>
+                <div>" . $verse . "</div>
+            </div>";
+            $render_count++;
+        }
     }
 
     return $html;
