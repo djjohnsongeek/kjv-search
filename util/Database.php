@@ -21,12 +21,7 @@ class Database
     }
 
     public function execute($sql) {
-        // debug_print(array($sql));
         $result = mysqli_query($this->db, $sql);
-        echo "<pre>";
-        print_r($result);
-        echo "</pre>";
-        echo "<br/>";
         if ($result === False) {
             $search_results = array();
         }
