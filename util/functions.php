@@ -6,6 +6,7 @@ function search($db, $query, $page) {
     $search_results = array();
 
     if (!$query) {
+        $search_results["count"] = 0;
         return $search_results;
     }
 
@@ -235,8 +236,10 @@ function generate_search_results_html($page, $query, $search_results) {
 
     // No results message
     if ($search_results["count"] === 0) {
-        $html .= "<div class='no-results-message'><span>No Results Found for '"
-              . $query . "'</span></div>";
+        $html .= "<div class='no-results-message'>"
+              .  "<span>No Results Found for \" "
+              .  $query
+              .  " \"</span></div>";
     }
 
     return $html;
