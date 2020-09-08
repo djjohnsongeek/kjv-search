@@ -10,7 +10,6 @@ if (!validate_page($page)) {
 
 $page = intval($page);
 $search_results = search($db, $query, $page);
-$count = $search_results["count"] ?? NULL;
 
 $db->close();
 // render page
