@@ -14,4 +14,3 @@ $search_results = search($db, $query, $page);
 $db->close();
 // render page
 include_once(DIR_TEMPLATES . "main.php");
-
