@@ -1,6 +1,4 @@
 Bugs/Issues
-- prevent mysql errors (Empty query)
-- use PDO or 
 - order results by book (when searching Jesus)
 
 Features
@@ -8,11 +6,9 @@ Features
 
 Refactor
 - orignize functions catagorically
-- create a db class?
 - use meaning full function and variable names
 - functions should only do one thing
     
 Security
 - secure files (prevent abritrary execution)
 - check protection against sql injection
-- check protection against js injection
