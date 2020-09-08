@@ -28,7 +28,7 @@ define(
             "num" => "numbers",
             "deu" => "deuteronomy",
             "jos" => "joshua",
-            "jud" => "judges",
+            "judg" => "judges",
             "rut" => "ruth",
             "1sa" => "1samuel",
             "2sa" => "2samuel",
