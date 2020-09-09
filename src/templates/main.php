@@ -37,7 +37,6 @@
         #results, .search-bar {
             margin: auto;
             width: 75%;
-            text-align: center;
         }
 
         .no-results-message {
