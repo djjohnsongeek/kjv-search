@@ -1,14 +1,7 @@
-Bugs/Issues
-- order results by book (when searching Jesus)
-
-Features
+Ppssible Future Features
 - Add Next and Previous links for chapters
-
-Refactor
-- orignize functions catagorically
-- use meaning full function and variable names
-- functions should only do one thing
+- Support multiple chapters (eg: Genesis 1-2)
     
 Security
-- secure files (prevent abritrary execution)
+- ensure directory traversal is prevented
 - check protection against sql injection
