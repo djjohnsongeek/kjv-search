@@ -1,5 +1,4 @@
-<?PHP
-# Basic Utilities stuff
+<?php # Utility functions
 
 function redirect($url) {
     header("Location: " . $url);
