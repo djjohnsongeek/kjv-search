@@ -1,4 +1,5 @@
-<?PHP
+<?php
+
 // SITE
 define("SITE_URL", "");
 

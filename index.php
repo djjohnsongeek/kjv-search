@@ -1,5 +1,4 @@
-<?PHP
-#### Gathers the user's search query and renders the results ####
+<?php
 require_once("src/init.php");
 
 $query = $_GET["q"] ?? NULL;

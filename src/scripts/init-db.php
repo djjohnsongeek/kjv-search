@@ -1,5 +1,4 @@
-<?PHP
-# script to reset database
+<?php # Script to reset database
 
 require_once("../init.php");
 // db connection set by init.php
