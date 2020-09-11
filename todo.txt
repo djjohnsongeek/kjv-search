@@ -1,4 +1,4 @@
-Ppssible Future Features
+Possible Future Features
 - Add Next and Previous links for chapters
 - Support multiple chapters (eg: Genesis 1-2)
     
