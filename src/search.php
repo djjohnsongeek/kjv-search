@@ -1,11 +1,9 @@
-<?php
-# Main search logic
+<?php # Main search logic
 
 function search($db, $query, $page) {
     $search_results = array();
 
     if (!$query) {
-        $search_results["count"] = 0;
         return $search_results;
     }
 
@@ -45,12 +43,12 @@ function reference_search($db, $query) {
 }
 
 
-# Helper Function for Search Logic
+# Helper Functions for Search Logic
 
 function generate_ref_sql_where($ref) {
-    // if chapter, and verse is present
+
     if ($ref["chapter"] && $ref["verse"]) {
-        // multiple verses?
+        
         $verse_range = explode("-", $ref["verse"]);
         if (count($verse_range) > 1) {
             $sql_where = "chapter = '" . $ref["chapter"]
@@ -62,7 +60,7 @@ function generate_ref_sql_where($ref) {
             . "' AND verse_id = '" . $ref["verse"] . "';";
         }
     }
-    // if just chapter and book
+    // no verses found in query
     else {
         $chapter = $ref["chapter"] === "" ? "1" : $ref["chapter"];
         $sql_where = "chapter = '" . $chapter . "';";
@@ -102,14 +100,15 @@ function get_book($query) {
     if ($book_key === "jud") {
         $book_key = substr($query, 0, 4);
     }
+
     return BOOKS[$book_key] ?? False;
 }
 
 function get_chapter($ref) {
     $chars = str_split($ref);
     $chapter = "";
-
     $length = count($chars);
+
     for ($i = 0; $i < $length; $i++) {
         if ($chars[$i] === ":") {
             break;
@@ -123,12 +122,12 @@ function get_chapter($ref) {
     return $chapter;
 }
 
-function get_verse_number($ref) {
-    $chars = str_split($ref);
+function get_verse_number($user_query) {
+    $chars = str_split($user_query);
     $verse_num = "";
-
     $length = count($chars);
     $parse_flag = False;
+
     for ($i = 0; $i < $length; $i++) {
         if ($parse_flag && (is_numeric($chars[$i]) || $chars[$i] === "-")) {
             $verse_num .= $chars[$i];
@@ -142,7 +141,7 @@ function get_verse_number($ref) {
     return $verse_num;
 }
 
-function generate_pretty_ref($search_results){
+function generate_pretty_ref($search_results) {
     $count = count($search_results);
     $reference = "";
 
