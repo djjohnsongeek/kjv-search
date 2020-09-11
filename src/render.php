@@ -1,7 +1,8 @@
-<?php
-# HTML Rendering Logic
+<?php # HTML Rendering Logic
 
 function generate_search_results_html($page, $query, $search_results) {
+    // debug_print(array($search_results));
+
     $html = "";
 
     if($query && $search_results["count"] > 0 && !isset($search_results["display"])) {
@@ -16,11 +17,11 @@ function generate_search_results_html($page, $query, $search_results) {
     }
 
     // No results message
-    if ($search_results["count"] === 0) {
+    if (isset($search_results["count"]) && $search_results["count"] === 0) {
         $html .= "<div class='no-results-message'>"
-              .  "<span>No Results Found for \" "
+              .  "<span>No Results Found for \""
               .  $query
-              .  " \"</span></div>";
+              .  "\"</span></div>";
     }
 
     return $html;
