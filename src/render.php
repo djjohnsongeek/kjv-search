@@ -29,8 +29,8 @@ function generate_search_results_html($page, $query, $search_results) {
 
 function generate_pagination_links($query, $search_results,  $page) {
     $html = "";
-    $prev_link = "<a href='http://biblesearch/?q=" . $query . "&p=" . strval($page - 1) . "'>Prev</a> | ";
-    $next_link = "<a href='http://biblesearch/?q=" . $query . "&p=" . strval($page + 1) . "'>Next</a><br/>";
+    $prev_link = "<a href='/?q=" . $query . "&p=" . strval($page - 1) . "'>Prev</a> | ";
+    $next_link = "<a href='/?q=" . $query . "&p=" . strval($page + 1) . "'>Next</a><br/>";
 
     $prev_link = $page >= 1 ? $prev_link : "<span class='disabled'>Prev</span> | ";
     $next_link = $search_results["count"] > 10 ? $next_link : "<span class='disabled'>Next</span><br/>";
